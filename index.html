@@ -93,11 +93,26 @@
             </button>
         </div>
 
+        <!-- Admin Controls -->
+        <div class="border-t pt-4 text-center">
+            <button onclick="toggleAdmin()" class="text-xs text-slate-400 underline hover:text-slate-600">
+                Admin Panel 🔒
+            </button>
+            <div id="admin-section" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-xl space-y-2 text-left">
+                <p class="text-xs font-semibold text-red-700">Admin Controls</p>
+                <input type="password" id="admin-pass" placeholder="Enter admin password (default: 1234)" class="w-full px-3 py-1.5 text-xs border rounded-lg focus:outline-none">
+                <button onclick="resetAllVotes()" class="w-full bg-red-600 text-white text-xs font-medium py-2 rounded-lg hover:bg-red-700 transition">
+                    Reset All Votes
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <script>
         let currentUser = "";
         let votes = JSON.parse(localStorage.getItem('weekend_votes') || "{}");
+        const ADMIN_PIN = "1234"; // You can change this password to whatever you like
 
         function startVoting() {
             const nameInput = document.getElementById('username').value.trim();
@@ -132,6 +147,38 @@
             alert("Vote saved successfully!");
         }
 
+        function toggleAdmin() {
+            const adminSec = document.getElementById('admin-section');
+            adminSec.classList.toggle('hidden');
+        }
+
+        function deleteVote(name) {
+            const pass = prompt("Enter Admin Password to remove this vote:");
+            if (pass === ADMIN_PIN) {
+                delete votes[name];
+                localStorage.setItem('weekend_votes', JSON.stringify(votes));
+                renderResults();
+                alert(`Removed vote for ${name}`);
+            } else if (pass !== null) {
+                alert("Incorrect Password!");
+            }
+        }
+
+        function resetAllVotes() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === ADMIN_PIN) {
+                if (confirm("Are you sure you want to delete ALL votes?")) {
+                    votes = {};
+                    localStorage.removeItem('weekend_votes');
+                    renderResults();
+                    alert("All votes have been reset.");
+                    document.getElementById('admin-pass').value = '';
+                }
+            } else {
+                alert("Incorrect Admin Password!");
+            }
+        }
+
         function renderResults() {
             const list = document.getElementById('results-list');
             const entries = Object.entries(votes);
@@ -143,11 +190,14 @@
                 return;
             }
 
-            // Render live voter list
+            // Render live voter list with delete buttons for admin
             list.innerHTML = entries.map(([name, date]) => `
                 <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
-                    <span class="font-semibold text-slate-700">${name}</span>
-                    <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium">${date}</span>
+                    <div>
+                        <span class="font-semibold text-slate-700">${name}</span>
+                        <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium ml-2">${date}</span>
+                    </div>
+                    <button onclick="deleteVote('${name}')" class="text-red-400 hover:text-red-600 font-bold px-1" title="Delete Vote">✕</button>
                 </div>
             `).join('');
 
