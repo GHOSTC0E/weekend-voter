@@ -10,6 +10,13 @@
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 space-y-6">
         
+        <!-- Top Picked Date Banner (Highest Voted Date) -->
+        <div id="top-date-card" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-4 text-center shadow-md">
+            <p class="text-xs font-semibold uppercase tracking-wider text-indigo-100">Top Picked Date</p>
+            <h2 id="top-date-display" class="text-xl font-bold mt-1">No votes yet</h2>
+            <p id="top-date-count" class="text-xs text-indigo-100 mt-0.5">Be the first to vote below!</p>
+        </div>
+
         <!-- Header -->
         <div class="text-center">
             <h1 class="text-2xl font-bold text-indigo-600">Weekend Date Voting</h1>
@@ -131,15 +138,36 @@
             
             if (entries.length === 0) {
                 list.innerHTML = '<p class="text-slate-400 text-center italic">No votes recorded yet.</p>';
+                document.getElementById('top-date-display').innerText = "No votes yet";
+                document.getElementById('top-date-count').innerText = "Be the first to vote below!";
                 return;
             }
 
+            // Render live voter list
             list.innerHTML = entries.map(([name, date]) => `
                 <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
                     <span class="font-semibold text-slate-700">${name}</span>
                     <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium">${date}</span>
                 </div>
             `).join('');
+
+            // Calculate most selected date
+            const dateCounts = {};
+            entries.forEach(([_, date]) => {
+                dateCounts[date] = (dateCounts[date] || 0) + 1;
+            });
+
+            let topDate = "";
+            let maxVotes = 0;
+            for (const [date, count] of Object.entries(dateCounts)) {
+                if (count > maxVotes) {
+                    maxVotes = count;
+                    topDate = date;
+                }
+            }
+
+            document.getElementById('top-date-display').innerText = topDate;
+            document.getElementById('top-date-count').innerText = `${maxVotes} vote${maxVotes > 1 ? 's' : ''}`;
         }
 
         function copyForWhatsApp() {
